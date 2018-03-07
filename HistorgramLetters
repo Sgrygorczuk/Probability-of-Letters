@@ -1,0 +1,251 @@
+/*
+Exercise 5
+For: CSC 22100 - F : Software Design Laboratory [ Fall 2016 ]
+Created by: Sebastian Grygorczuk
+Due: 11/30/2016
+*/
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.SecureRandom;
+import java.util.Scanner;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
+/*
+HistogramLetters is the class that opens the wanted file, reads it, counts the
+occurance of all the letters and then uses that inforamtion to get probabilty of
+a letter and creats a visaul display of that in the form of a pie chart.
+*/
+
+public class HistorgramLetters extends JFrame {
+    private static char [] letters = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','v','u','w','y'};
+    private static int [] counter;
+    private static float [] probabilites;
+    private static int [] maxIndexes;
+    private static int [] degrees;
+    private int sum;
+    private float probablityLeftOver;
+    private int probablityLeftOverDegree;
+    private int n = 5;
+    private Scanner input;
+
+/*
+The consturctor indiates all the arrays necessary, asks the user for the number of
+letters
+they would like displayed on the pie chart and calls the arithmetic function to
+calcuate
+the necessary infromation.
+
+*/
+public HistorgramLetters () throws IOException
+{
+    counter = new int[24];
+    probabilites = new float [24];
+    sum = 0;
+    for(int i = 0; i < 24; i++)
+    {
+        counter[i] = 0;
+        probabilites[i] = 0;
+    }
+    String stringy = JOptionPane.showInputDialog("How many letters would you like to display on the pie chart?");
+    if(isNumeric(stringy))
+    {
+        n = Integer.parseInt(stringy);
+    }
+    maxIndexes = new int [n];
+    degrees = new int [n];
+    analyzePath();
+    getSum();
+    getMaxIndexes();
+    setProbabilites();
+    getDegrees();
+    System.out.print(counter[maxIndexes[0]]);
+}
+
+/*
+AnalyzePath method gives the path, and if
+the path is good it will read the file.
+*/
+
+private void analyzePath() throws IOException
+{
+    Path path = getFilePath();
+    if (path != null && Files.exists(path))
+    {
+        input = new Scanner(path);
+        while(input.hasNext())
+        {    
+            char [] string = input.next().toCharArray();
+            counts(string);
+        }
+    }
+}
+
+/*
+the getFilePath method juses JFileChooser to allow
+the user to pick which file they would like to read.
+*/
+
+private Path getFilePath()
+{
+    JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setFileSelectionMode(
+    JFileChooser.FILES_AND_DIRECTORIES);
+    int result = fileChooser.showOpenDialog(this);
+    if (result == JFileChooser.CANCEL_OPTION)
+    {
+        System.exit(1);
+    }
+    return fileChooser.getSelectedFile().toPath();
+}
+
+/*
+Once the file has been read the getSum method is used to
+count the total number of letters stored in that file.
+*/
+
+private int getSum()
+{
+    for(int integer: counter)
+    {
+        sum += integer;
+    }
+    return sum;
+}
+
+/*
+the setProbabilites method calcuates the probablity
+of each letter, and the total probablity left over from
+the top n letters.
+*/
+
+private void setProbabilites()
+{
+    for(int i = 0; i < counter.length; i++)
+    {
+        probabilites[i] = (float) (counter[i]);
+        probabilites[i] = (probabilites[i]/sum);
+    }
+    for(int i = 0; i < n; i++)
+    {
+        probablityLeftOver += probabilites[maxIndexes[i]];
+    }
+    probablityLeftOver = 1 - probablityLeftOver;
+}
+
+/*
+The method counts, counts the number of letters in the file
+may they be Uppercase or lowercase and ignores anythng that's not
+a letter.
+*/
+
+private void counts(char [] array)
+{
+    for(int i = 0; i < array.length; i++)
+    {
+        array[i] = Character.toLowerCase(array[i]);
+        for(int j = 0; j < 24; j++)
+        {
+            if(array[i] == letters[j])
+            {
+                counter[j]++;
+            }
+        }
+    }
+}
+
+/*
+Finds the top n letters that the user want displayed in the pie chart
+*/
+
+private void getMaxIndexes()
+{
+    int [] large = new int [24];
+    for(int i = 0; i < counter.length; i++)
+    {
+        large[i] = counter[i];
+    }
+    for(int j = 0; j < maxIndexes.length; j++)
+    {
+        int max = large[0];
+        int maxIndex = 0;
+        for(int i = 0; i < large.length; i++)
+        {
+            if(max < large[i])
+            {
+                max = large[i];
+                maxIndex = i;
+            }
+        }
+        large[maxIndex] = 0;
+        maxIndexes[j] = maxIndex;
+    }
+}
+
+/*
+The getDegrees translates the probablities into degrees on the
+pie chart .
+*/
+
+private void getDegrees()
+{
+    for(int i = 0; i < degrees.length; i++)
+    {
+        degrees[i] = (int) (360*probabilites[maxIndexes[i]]);
+    }
+    probablityLeftOverDegree = (int) (360*probablityLeftOver);
+}
+
+/*
+Checks if the users input is a number.
+*/
+
+private static boolean isNumeric(String str)
+{
+    try
+    {
+        int d = Integer.parseInt(str);
+    }
+    catch(NumberFormatException nfe)
+    {
+        return false;
+    }
+    return true;
+}
+
+/*
+drawPieChart creates the pie chart and legend based on the
+information collected from the read file.
+*/
+
+public void drawPieChart(Graphics g)
+{
+    SecureRandom random = new SecureRandom();
+    int startAngle = 90;
+    int y = 20;
+    g.setColor(Color.LIGHT_GRAY);
+    g.fillRect(0, 0, 400, 400);
+    g.setColor(Color.WHITE);
+    g.fillOval(20, 100, 200, 200);
+    g.drawString("Legend", 290, y-5);
+    for(int i = 0; i < degrees.length; i++)
+    {
+        g.setColor(new
+        Color(random.nextInt(256),random.nextInt(256),random.nextInt(256)));
+        g.fillArc(20, 100, 200, 200, startAngle, -degrees[i]);
+        startAngle -= degrees[i];
+        g.fillRect(250, y, 15, 15);
+        g.drawString("[" + letters[maxIndexes[i]]+"] " + probabilites[maxIndexes[i]], 270, y+12);
+        y += 16;
+    }
+    g.setColor(Color.WHITE);
+    g.fillRect(250, y, 15, 15);
+    g.drawString("All other letters", 270, y+12);
+    g.drawString(probablityLeftOver +" ", 270, y+28);
+}
+}

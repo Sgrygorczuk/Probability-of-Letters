@@ -1,0 +1,42 @@
+/*
+Exercise 5
+For: CSC 22100 - F : Software Design Laboratory [ Fall 2016 ]
+Created by: Sebastian Grygorczuk
+Due: 11/30/2016
+*/
+
+import java.awt.BorderLayout;
+import java.awt.Graphics;
+import java.io.IOException;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+/*
+This is the main class from which the program will be executed from
+*/
+
+public class Main extends JPanel {
+    HistorgramLetters graph = new HistorgramLetters();
+//Constructor so that paintCompomnent can be called when Main object is created.
+
+public Main() throws IOException
+{
+}
+//Paint component draws provided infromation from the HistogramLetters class.
+public void paintComponent(Graphics g)
+{
+    super.paintComponent(g);
+    graph.drawPieChart(g);
+}
+
+//The main method creates the window where all of the infomation will be displayed in
+public static void main(String [] args ) throws IOException
+{
+    JFrame frame = new JFrame("HistorgramLetters");
+    Main application = new Main();
+    frame.add(application,BorderLayout.CENTER);
+    frame.setSize(400, 400);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setVisible(true);
+}
+}
